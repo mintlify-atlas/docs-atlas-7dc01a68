@@ -1,0 +1,101 @@
+---
+title: "Run the Zoom OAuth Sample App Locally"
+sidebarTitle: "Local Setup"
+description: "Set up the Zoom OAuth Sample App on your machine: clone the repo, install nodemon, and configure your environment variables to run on port 4000."
+---
+
+This page walks you through getting the Zoom OAuth Sample App running on your local machine. The app is a single `index.js` file that uses only Node.js built-ins plus `nodemon` for development — no Express, no other runtime packages.
+
+## Prerequisites
+
+<Note>
+  You need **Node.js 18 or later** and **npm** installed on your machine. Verify your versions before continuing:
+
+  ```bash
+  node --version
+  npm --version
+  ```
+</Note>
+
+## Clone and install
+
+<Steps>
+  <Step title="Clone the repository">
+    Clone the sample app from GitHub and navigate into the project directory:
+
+    ```bash
+    git clone https://github.com/zoom/zoom-oauth-sample-app.git && cd zoom-oauth-sample-app
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    Install the project's single development dependency — `nodemon@^3.1.9`:
+
+    ```bash
+    npm install
+    ```
+
+    There are no runtime package dependencies. The server is built entirely on Node.js built-in modules (`http`, `https`, `url`).
+  </Step>
+</Steps>
+
+## Configure environment variables
+
+The app reads three environment variables at startup. These are loaded from a `.env` file via the `--env-file=.env` flag passed to `nodemon` in the `start` script.
+
+Create the `.env` file in the project root:
+
+```bash
+touch .env
+```
+
+Then open it and add your credentials:
+
+```ini .env
+CLIENT_ID=your_zoom_client_id
+CLIENT_SECRET=your_zoom_client_secret
+REDIRECT_URL=https://your-ngrok-url.ngrok.io
+```
+
+| Variable | Description |
+|---|---|
+| `CLIENT_ID` | The Client ID from your Zoom Marketplace OAuth app |
+| `CLIENT_SECRET` | The Client Secret from your Zoom Marketplace OAuth app |
+| `REDIRECT_URL` | Your public ngrok HTTPS URL (see [ngrok setup](/setup/ngrok)) |
+
+<Warning>
+  `.env` is listed in `.gitignore` and will never be included in commits. **Never commit this file or share your `CLIENT_SECRET` publicly.** Treat your Client Secret like a password.
+</Warning>
+
+## Start the server
+
+Run the `start` script, which executes `nodemon --env-file=.env index.js`:
+
+```bash
+npm run start
+```
+
+The server begins listening on port 4000. You should see the following output in your terminal:
+
+```
+Server listening on port 4000
+```
+
+Your app is now reachable at **http://localhost:4000**.
+
+<Tip>
+  `nodemon` watches your project files for changes and automatically restarts the server whenever you save — no need to manually stop and restart the process during development.
+</Tip>
+
+## Project structure
+
+| File / Directory | Purpose |
+|---|---|
+| `index.js` | The entire server implementation — handles OAuth redirect, token exchange, and the `/v2/users/me` API call |
+| `package.json` | Project config and the `npm run start` script |
+| `.env` | Your credentials and redirect URL — **gitignored, never committed** |
+| `node_modules/` | Installed packages (only `nodemon`) — **gitignored** |
+
+## Next step
+
+Now that your server is running locally, you need a public HTTPS URL so Zoom can redirect users back to your app after authorization. Continue to [ngrok setup](/setup/ngrok).

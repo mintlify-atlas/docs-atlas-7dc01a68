@@ -1,0 +1,60 @@
+{
+  "projectType": "general",
+  "projectName": "Zoom OAuth Sample App",
+  "projectDescription": "A minimal Node.js Hello World app that demonstrates the Zoom OAuth 2.0 authorization code flow, exchanging credentials for an access token and calling the Zoom API.",
+  "theme": "luma",
+  "primaryColor": "#0c5cfc",
+  "lightColor": "#84b4fc",
+  "darkColor": null,
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": ["introduction", "quickstart"]
+      },
+      {
+        "group": "Setup & Configuration",
+        "pages": [
+          "setup/local-setup",
+          "setup/ngrok",
+          "setup/zoom-marketplace-app"
+        ]
+      },
+      {
+        "group": "How It Works",
+        "pages": [
+          "how-it-works/oauth-flow",
+          "how-it-works/environment-variables",
+          "how-it-works/api-call"
+        ]
+      },
+      {
+        "group": "Reference",
+        "pages": [
+          "reference/configuration",
+          "reference/zoom-api-endpoints",
+          "reference/troubleshooting"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "OAuth 2.0 authorization code flow with Zoom",
+    "Minimal Node.js HTTP server with zero runtime dependencies",
+    "Automatic redirect to Zoom authorization page",
+    "Access token exchange from authorization code",
+    "Calls Zoom API /v2/users/me to retrieve user profile",
+    "Environment-variable-based credential management via .env",
+    "ngrok integration for local development redirect URL",
+    "nodemon for hot-reloading during development"
+  ],
+  "publicApiSurface": [
+    "GET / — redirects to Zoom OAuth authorize URL",
+    "GET /?code=<auth_code> — exchanges code for access token and returns user profile",
+    "POST https://zoom.us/oauth/token — token exchange endpoint (Zoom)",
+    "GET https://api.zoom.us/v2/users/me — user info endpoint (Zoom)",
+    "ENV: CLIENT_ID — Zoom OAuth app client ID",
+    "ENV: CLIENT_SECRET — Zoom OAuth app client secret",
+    "ENV: REDIRECT_URL — OAuth redirect URI (ngrok URL in development)"
+  ]
+}

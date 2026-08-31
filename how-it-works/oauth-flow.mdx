@@ -1,0 +1,95 @@
+---
+title: "How the Zoom OAuth 2.0 Authorization Code Flow Works"
+sidebarTitle: "OAuth Flow"
+description: "Step-by-step walkthrough of how the sample app implements Zoom's OAuth 2.0 authorization code grant — from the initial redirect to the access token exchange."
+---
+
+The app implements the OAuth 2.0 authorization code grant type — the recommended flow for server-side applications that act on behalf of a user. This page traces each step of the flow through the actual server code in `index.js`.
+
+## Flow Overview
+
+<Steps>
+  <Step title="User visits the app">
+    The browser opens `http://localhost:4000`. The server checks if the request path is `/` and whether a `code` query parameter is present. Since it is not, it falls into the `else` branch.
+  </Step>
+
+  <Step title="Redirect to Zoom authorization">
+    The server builds a URL to `https://zoom.us/oauth/authorize` with `response_type=code`, `client_id`, and `redirect_uri`, then sends an HTTP 302 redirect.
+
+    ```javascript
+    const authURL = new URL('https://zoom.us/oauth/authorize');
+    authURL.searchParams.set('response_type', 'code');
+    authURL.searchParams.set('client_id', process.env.CLIENT_ID);
+    authURL.searchParams.set('redirect_uri', process.env.REDIRECT_URL);
+
+    res.writeHead(302, { Location: authURL.toString() });
+    res.end();
+    ```
+  </Step>
+
+  <Step title="User authorizes on Zoom">
+    The user sees Zoom's consent screen listing the requested scopes. After clicking **Allow**, Zoom redirects to the `redirect_uri` with a `?code=` query parameter appended.
+  </Step>
+
+  <Step title="Server receives the code">
+    The redirect lands on `GET /?code=AUTHORIZATION_CODE`. The server detects the `code` param:
+
+    ```javascript
+    if (requestURL.pathname === '/' && requestURL.searchParams.has('code')) {
+        const code = requestURL.searchParams.get('code');
+    ```
+  </Step>
+
+  <Step title="Token exchange">
+    The server POSTs to `https://zoom.us/oauth/token` with `grant_type=authorization_code`, `code`, and `redirect_uri` in the body. The `Authorization` header is `Basic base64(CLIENT_ID:CLIENT_SECRET)`.
+
+    ```javascript
+    const params = new URLSearchParams();
+    params.append('grant_type', 'authorization_code');
+    params.append('code', code);
+    params.append('redirect_uri', process.env.REDIRECT_URL);
+
+    const tokenOptions = {
+        hostname: 'zoom.us',
+        path: '/oauth/token',
+        method: 'POST',
+        headers: {
+            'Authorization': `Basic ${Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    };
+    ```
+  </Step>
+
+  <Step title="Access token received">
+    Zoom returns a JSON body containing `access_token` (and `refresh_token`, `token_type`, `expires_in`). The app checks that `tokenBody.access_token` exists before proceeding.
+  </Step>
+
+  <Step title="API call with the token">
+    The server calls `GET https://api.zoom.us/v2/users/me` with `Authorization: Bearer <access_token>` and returns the JSON response as an HTML `<pre>` block to the browser.
+  </Step>
+</Steps>
+
+## Two-Route Architecture
+
+<Info>
+  The app has exactly two logical branches: **(1)** no `code` param → redirect to Zoom, and **(2)** `code` param present → exchange the token and call the API. Both routes are handled by a single `http.createServer` callback, keeping the entire implementation in one file.
+</Info>
+
+## Authorization URL Parameters
+
+| Parameter | Value | Description |
+|-----------|-------|-------------|
+| `response_type` | `code` | Requests the authorization code grant |
+| `client_id` | `process.env.CLIENT_ID` | Your app's Client ID from Zoom Marketplace |
+| `redirect_uri` | `process.env.REDIRECT_URL` | Where Zoom sends the code after authorization |
+
+## Token Request Parameters
+
+| Parameter | Location | Value |
+|-----------|----------|-------|
+| `grant_type` | Body | `authorization_code` |
+| `code` | Body | The code from the redirect |
+| `redirect_uri` | Body | Must match the registered redirect URI |
+| `Authorization` | Header | `Basic base64(CLIENT_ID:CLIENT_SECRET)` |
+| `Content-Type` | Header | `application/x-www-form-urlencoded` |

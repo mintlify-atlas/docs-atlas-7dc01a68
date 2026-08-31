@@ -1,0 +1,82 @@
+---
+title: "Configuration Reference for Zoom OAuth Sample App"
+sidebarTitle: "Configuration"
+description: "Complete reference for all configuration options in the Zoom OAuth Sample App: environment variables, server port, npm scripts, and nodemon setup."
+---
+
+The Zoom OAuth Sample App is configured entirely through environment variables and the `package.json` start script. There are no config files — all settings are defined in a `.env` file that `nodemon` injects at startup.
+
+## Environment Variables
+
+<ParamField body="CLIENT_ID" type="string" required>
+  Your Zoom OAuth app's Client ID from the Zoom App Marketplace. Used in the
+  authorization redirect URL and Base64-encoded in the token exchange
+  `Authorization: Basic` header.
+</ParamField>
+
+<ParamField body="CLIENT_SECRET" type="string" required>
+  Your Zoom OAuth app's Client Secret. Combined with `CLIENT_ID` to form the
+  `Basic` auth header during token exchange. Sensitive — keep in `.env`, never
+  in source control.
+</ParamField>
+
+<ParamField body="REDIRECT_URL" type="string" required>
+  Full HTTPS URL Zoom redirects to after user authorization. During development,
+  use your ngrok forwarding URL. Must match **exactly** the value registered in
+  the Zoom App Marketplace.
+</ParamField>
+
+## Server Configuration
+
+The HTTP server is configured directly in `index.js` with no external config file:
+
+| Setting | Value | Notes |
+|---------|-------|-------|
+| **Port** | `4000` | Hardcoded in `server.listen(4000, ...)` |
+| **Host** | `http://localhost:4000` | Local development address |
+| **TLS** | None | HTTPS is handled externally (by ngrok in development) |
+
+The server does not terminate TLS itself. In development, ngrok creates a secure tunnel to `localhost:4000`, providing the HTTPS URL that Zoom requires for the redirect URI.
+
+## npm Scripts
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `npm run start` | `nodemon --env-file=.env index.js` | Start the server with live reload and env loading |
+| `npm test` | _(not implemented)_ | Exits with error — no tests defined |
+
+## nodemon Configuration
+
+The project uses `nodemon` to run the development server with automatic restarts and environment variable loading.
+
+| Setting | Value |
+|---------|-------|
+| **Package** | `nodemon` |
+| **Version** | `^3.1.9` (devDependency) |
+| **Env loading flag** | `--env-file=.env` |
+
+- The `--env-file=.env` flag loads the `.env` file before starting the Node.js process, injecting all variables into `process.env`.
+- nodemon watches all `.js` files for changes and automatically restarts the server when a file is saved.
+
+<Tip>
+  If you add new environment variables to `.env`, you must **restart nodemon**
+  for them to take effect. nodemon does not hot-reload env file changes — only
+  file changes in watched `.js` files trigger a restart.
+</Tip>
+
+## Dependencies
+
+| Package | Type | Version | Purpose |
+|---------|------|---------|---------|
+| `nodemon` | devDependency | `^3.1.9` | Development server with auto-restart and env loading |
+| _(none)_ | — | — | No runtime dependencies — uses Node.js built-ins only |
+
+## Built-in Node.js Modules Used
+
+The app relies exclusively on Node.js built-in modules — no third-party runtime packages are required:
+
+| Module | Purpose |
+|--------|---------|
+| `http` | Creates the HTTP server that listens on port 4000 |
+| `https` | Makes outbound HTTPS requests to Zoom APIs |
+| `url` | `URL` and `URLSearchParams` for building and parsing URLs |

@@ -1,0 +1,172 @@
+---
+title: "Troubleshooting the Zoom OAuth Sample App"
+sidebarTitle: "Troubleshooting"
+description: "Solutions for common issues when running the Zoom OAuth Sample App: invalid redirect URI, missing credentials, ngrok disconnects, and token errors."
+---
+
+This page covers the most common errors encountered when running the Zoom OAuth Sample App and explains how to fix each one. Most issues stem from mismatched redirect URLs, missing environment variables, or an expired ngrok session.
+
+<AccordionGroup>
+
+  <Accordion title="Redirect URI mismatch error from Zoom">
+    **Symptom:** After authorizing on Zoom's consent screen, Zoom returns an error
+    like `"redirect_uri_mismatch"` or displays an error page instead of
+    redirecting back to your app.
+
+    **Cause:** The `REDIRECT_URL` value in your `.env` file doesn't exactly match
+    the **Redirect URL for OAuth** registered in the Zoom App Marketplace. Even
+    minor differences — a trailing slash, `http` vs `https`, or a different ngrok
+    subdomain — will cause this error.
+
+    **Fix:**
+    1. Copy your current ngrok forwarding URL exactly (e.g., `https://abc123.ngrok.io`).
+    2. Set `REDIRECT_URL=https://abc123.ngrok.io` in your `.env` file.
+    3. Paste the same URL into the **Redirect URL for OAuth** field in your app's
+       settings on the Zoom App Marketplace.
+    4. Save the Marketplace settings, then restart nodemon (`Ctrl+C`, then `npm run start`) so the new `.env` value is loaded.
+  </Accordion>
+
+  <Accordion title='"Token request failed" in server logs'>
+    **Symptom:** The server console prints `Token request failed:` followed by an
+    error object or a response body that does not contain `access_token`.
+
+    **Causes and fixes:**
+
+    - **Wrong or missing `CLIENT_ID` / `CLIENT_SECRET`:** Open `.env` and
+      double-check both values against the credentials shown in your app's
+      **App Credentials** section on the Zoom App Marketplace. Copy-paste them
+      to avoid typos.
+
+    - **Expired authorization code:** Authorization codes are single-use and
+      short-lived. If there was any delay between Zoom's redirect and the token
+      exchange request, the code may have already expired. Start the OAuth flow
+      again from `http://localhost:4000`.
+
+    - **`REDIRECT_URL` mismatch:** The `redirect_uri` sent in the token request
+      body must exactly match the registered redirect URI and the value used in
+      the initial authorization redirect. Correct the mismatch in `.env` and the
+      Zoom App Marketplace, then restart nodemon.
+  </Accordion>
+
+  <Accordion title="Server not responding / localhost:4000 refused">
+    **Symptom:** The browser shows "This site can't be reached" or "Connection
+    refused" when navigating to `http://localhost:4000`.
+
+    **Cause:** The Node.js server is not running.
+
+    **Fix:**
+    1. Open a terminal in the project directory.
+    2. Run `npm run start`.
+    3. Wait for the message `Server listening on port 4000` to appear in the
+       terminal output.
+    4. Refresh `http://localhost:4000` in your browser.
+
+    <Note>
+      If port `4000` is already in use by another process, you will see an
+      `EADDRINUSE` error. Stop the other process or change the port number in
+      `index.js` (`server.listen(4000, ...)`).
+    </Note>
+  </Accordion>
+
+  <Accordion title="ngrok tunnel expired or disconnected">
+    **Symptom:** After Zoom redirects back to your app, the browser receives a
+    404 response or an ngrok error page. Starting a new ngrok session produces a
+    different forwarding URL than the one currently registered.
+
+    **Fix:**
+    1. Restart ngrok in your terminal:
+       ```bash
+       ngrok http 4000
+       ```
+    2. Copy the new HTTPS forwarding URL (e.g., `https://xyz789.ngrok.io`).
+    3. Update `REDIRECT_URL` in your `.env` file with the new URL.
+    4. Update the **Redirect URL for OAuth** field in your app on the Zoom App
+       Marketplace and save.
+    5. Restart nodemon (`Ctrl+C`, then `npm run start`) to reload the new
+       environment variable.
+
+    <Tip>
+      Upgrade to a paid ngrok plan to get a stable custom subdomain and avoid
+      this cycle every time the tunnel restarts.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Environment variables are undefined (process.env.CLIENT_ID is undefined)">
+    **Symptom:** The server starts successfully, but the authorization URL sent
+    to Zoom is malformed (e.g., `client_id=undefined`), or the token exchange
+    fails with authentication errors.
+
+    **Cause:** The `.env` file is missing, contains incorrectly named variables,
+    or nodemon was not restarted after the file was created or modified.
+
+    **Fix:**
+    1. Confirm that a `.env` file exists at the **project root** (the same
+       directory as `index.js` and `package.json`).
+    2. Verify the file contains all three required variables with no extra spaces
+       around the `=` sign:
+       ```bash
+       CLIENT_ID=your_client_id_here
+       CLIENT_SECRET=your_client_secret_here
+       REDIRECT_URL=https://your-ngrok-url.ngrok.io
+       ```
+    3. Stop the running server (`Ctrl+C`) and restart it with `npm run start`.
+       nodemon only reads the `.env` file at startup — it does not reload it
+       automatically when the file changes.
+  </Accordion>
+
+  <Accordion title="App requires admin pre-approval">
+    **Symptom:** After clicking **Install** or **Allow** on Zoom's OAuth consent
+    screen, you see a message indicating that the app requires administrator
+    approval before it can be installed.
+
+    **Cause:** Your Zoom account administrator has restricted app installations to
+    a pre-approved list. Apps outside that list — including your development app
+    — require explicit admin authorization.
+
+    **Fix:**
+    - Submit a pre-approval request to your Zoom account administrator and ask
+      them to approve your development app.
+    - Alternatively, test using a Zoom account where you hold the **Owner** or
+      **Admin** role, which allows installing unapproved apps.
+  </Accordion>
+
+  <Accordion title="access_token missing scope errors">
+    **Symptom:** After a successful token exchange, the call to
+    `GET /v2/users/me` returns a `401 Unauthorized` or `403 Forbidden` response
+    with an error message referencing insufficient scopes.
+
+    **Cause:** The `user:read` scope was not added to your Zoom App Marketplace
+    app, so the issued access token does not grant permission to read user
+    profile data.
+
+    **Fix:**
+    1. Go to your app in the [Zoom App Marketplace](https://marketplace.zoom.us).
+    2. Navigate to the **Scopes** section.
+    3. Search for and add the `user:read` scope.
+    4. Save the changes.
+    5. Reinstall the app (re-authorize via `http://localhost:4000`) so a new
+       access token is issued with the updated scopes.
+  </Accordion>
+
+</AccordionGroup>
+
+## Getting More Help
+
+<CardGroup cols={2}>
+  <Card
+    title="Zoom Developer Support"
+    icon="headset"
+    href="https://devsupport.zoom.us"
+  >
+    Open a support ticket with Zoom's developer support team for issues related
+    to the Zoom platform, API errors, or Marketplace app configuration.
+  </Card>
+  <Card
+    title="Zoom Developer Forum"
+    icon="comments"
+    href="https://devforum.zoom.us"
+  >
+    Ask questions and browse answers from the Zoom developer community on the
+    official developer forum.
+  </Card>
+</CardGroup>

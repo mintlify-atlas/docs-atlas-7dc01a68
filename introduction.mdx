@@ -1,0 +1,60 @@
+---
+title: "Zoom OAuth Sample App: OAuth 2.0 Hello World for Node.js"
+sidebarTitle: "Introduction"
+description: "Learn how the Zoom OAuth Sample App demonstrates the OAuth 2.0 authorization code flow in a minimal Node.js server with no runtime dependencies."
+---
+
+The Zoom OAuth Sample App is a minimal, single-file Node.js HTTP server that demonstrates the complete Zoom OAuth 2.0 authorization code flow from end to end. It has **zero runtime dependencies** — the entire implementation lives in `index.js` and relies exclusively on Node.js built-in modules (`http`, `https`, and `url`). Maintained by Zoom, it is the official sample application for developers learning how OAuth works on the [Zoom App Marketplace](https://marketplace.zoom.us/).
+
+## What this app does
+
+<Steps>
+  <Step title="Listen on port 4000">
+    The Node.js HTTP server starts and listens on `http://localhost:4000`, ready to handle incoming requests.
+  </Step>
+  <Step title="Redirect unauthenticated visitors to Zoom">
+    When a visitor hits the root path without an authorization code, the server builds a Zoom OAuth authorization URL and issues a `302` redirect to `https://zoom.us/oauth/authorize`, sending the user to Zoom's login and consent screen.
+  </Step>
+  <Step title="Receive the authorization code">
+    After the user approves the app, Zoom redirects back to the configured redirect URI with a one-time `code` query parameter (e.g. `http://localhost:4000/?code=abc123`). The server parses this code from the incoming request URL.
+  </Step>
+  <Step title="Exchange the code for an access token">
+    The server makes a `POST` request to `https://zoom.us/oauth/token` with the authorization code, redirect URI, and Base64-encoded `CLIENT_ID:CLIENT_SECRET` credentials in the `Authorization` header, following the standard OAuth 2.0 token exchange.
+  </Step>
+  <Step title="Call the Zoom API">
+    Using the returned `access_token`, the server makes a `GET` request to `https://api.zoom.us/v2/users/me` with a `Bearer` token in the `Authorization` header to fetch the authenticated user's Zoom profile.
+  </Step>
+  <Step title="Return the user profile as JSON">
+    The server responds to the browser with an HTML page containing the user's Zoom profile data formatted as pretty-printed JSON, confirming the full OAuth flow completed successfully.
+  </Step>
+</Steps>
+
+## Key technical details
+
+<CardGroup cols={2}>
+  <Card title="Zero runtime dependencies" icon="feather">
+    Uses only Node.js built-in modules — `http`, `https`, and `url` — so there is nothing to audit, patch, or keep up to date at runtime. The entire server logic is fewer than 70 lines of vanilla JavaScript.
+  </Card>
+  <Card title="Authorization Code Flow" icon="key">
+    Follows the standard OAuth 2.0 authorization code grant type as defined in RFC 6749. The short-lived authorization code is exchanged server-side for an access token, keeping credentials out of the browser.
+  </Card>
+  <Card title="Environment-variable config" icon="gear">
+    All sensitive credentials (`CLIENT_ID`, `CLIENT_SECRET`, `REDIRECT_URL`) are stored in a `.env` file at the project root and loaded automatically by `nodemon` via its `--env-file` flag — no extra dotenv library required.
+  </Card>
+  <Card title="Hot reload" icon="arrows-rotate">
+    `nodemon` watches `index.js` and automatically restarts the server whenever the file changes, making the edit-save-test loop frictionless during local development.
+  </Card>
+</CardGroup>
+
+## Prerequisites
+
+Before running the sample app, make sure you have the following:
+
+- **Node.js 18 or later** — the `--env-file` flag used in the `npm run start` script requires Node.js 18+. Download from [nodejs.org](https://nodejs.org/).
+- **A Zoom account** — sign up for free at [zoom.us](https://zoom.us/signup) if you don't already have one.
+- **Access to the Zoom App Marketplace** — you'll need to be able to create and configure OAuth apps at [marketplace.zoom.us](https://marketplace.zoom.us/).
+- **ngrok** — creates a public HTTPS tunnel to your local server so Zoom can reach your redirect URI during development. Download from [ngrok.com](https://ngrok.com/download).
+
+<Note>
+  This sample app is for learning and local development. Do not use it as-is in production — it lacks error handling, session management, and HTTPS termination required for production deployments.
+</Note>

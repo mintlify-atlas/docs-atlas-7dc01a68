@@ -1,0 +1,61 @@
+---
+title: "Environment Variables for Zoom OAuth Sample App"
+sidebarTitle: "Environment Variables"
+description: "Reference for the three environment variables the Zoom OAuth Sample App requires: CLIENT_ID, CLIENT_SECRET, and REDIRECT_URL — how they are loaded and used."
+---
+
+The sample app reads all its configuration from three environment variables. These are loaded at startup via `nodemon --env-file=.env`, so they are available in `process.env` throughout `index.js` without any additional dotenv package.
+
+## How Variables Are Loaded
+
+The `start` script in `package.json` is:
+
+```bash
+nodemon --env-file=.env index.js
+```
+
+The `--env-file` flag is a Node.js 20.6+ built-in feature (also available in nodemon) that loads the specified file before starting the process, injecting each key-value pair directly into `process.env`.
+
+<Warning>
+  The `.gitignore` includes `.env` — never commit this file to source control.
+</Warning>
+
+## Variable Reference
+
+<ParamField path="CLIENT_ID" type="string" required>
+  The Client ID of your OAuth app from the Zoom App Marketplace. Used in the `Authorization: Basic` header when exchanging the authorization code for a token, and as the `client_id` parameter in the authorization URL.
+
+  **Example:** `1234567890abcdef`
+</ParamField>
+
+<ParamField path="CLIENT_SECRET" type="string" required>
+  The Client Secret of your OAuth app from the Zoom App Marketplace. Combined with `CLIENT_ID` and Base64-encoded for the `Authorization: Basic` header during the token exchange.
+
+  **Example:** `abcdef1234567890abcdef1234567890`
+
+  <Warning>
+    Never expose this value publicly or commit it to source control.
+  </Warning>
+</ParamField>
+
+<ParamField path="REDIRECT_URL" type="string" required>
+  The full HTTPS URL where Zoom redirects users after authorization. During local development this is your ngrok forwarding URL. Must exactly match the Redirect URL registered in your Zoom App Marketplace app settings.
+
+  **Example:** `https://abc123def456.ngrok.io`
+</ParamField>
+
+## Example .env File
+
+```ini .env
+CLIENT_ID=1234567890abcdef
+CLIENT_SECRET=abcdef1234567890abcdef1234567890
+REDIRECT_URL=https://abc123def456.ngrok.io
+```
+
+## How Each Variable Is Used in the Code
+
+| Variable | Where used in `index.js` |
+|----------|--------------------------|
+| `CLIENT_ID` | `authURL.searchParams.set('client_id', process.env.CLIENT_ID)` and Basic auth header |
+| `CLIENT_SECRET` | Basic auth header: `Buffer.from(CLIENT_ID:CLIENT_SECRET).toString('base64')` |
+| `REDIRECT_URL` | `authURL.searchParams.set('redirect_uri', ...)` and token exchange body |

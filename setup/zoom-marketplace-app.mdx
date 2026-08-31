@@ -1,0 +1,104 @@
+---
+title: "Create a Zoom OAuth App on the Marketplace"
+sidebarTitle: "Marketplace App"
+description: "Step-by-step guide to creating an OAuth app on the Zoom App Marketplace, configuring scopes and redirect URLs, and installing it on your account."
+---
+
+To use the sample app, you need an OAuth app registered on the Zoom App Marketplace. This generates the Client ID and Client Secret that your server uses to exchange authorization codes for access tokens.
+
+## Create the app
+
+<Steps>
+  <Step title="Open the Zoom App Marketplace">
+    Sign in to the [Zoom App Marketplace](https://marketplace.zoom.us) and click **Develop → Build App** in the top navigation bar.
+  </Step>
+
+  <Step title="Select the OAuth app type">
+    From the list of app types, select **OAuth** and click **Create**. Give your app a name (for example, `zoom-oauth-hello-world`) and confirm.
+  </Step>
+
+  <Step title="Copy your credentials to .env">
+    After the app is created, Zoom immediately shows your **Client ID** and **Client Secret** on the **App Credentials** tab. Copy both values and add them to your `.env` file:
+
+    ```ini .env
+    CLIENT_ID=your_generated_client_id
+    CLIENT_SECRET=your_generated_client_secret
+    REDIRECT_URL=https://abc123def456.ngrok.io
+    ```
+  </Step>
+</Steps>
+
+## Configure the redirect URL
+
+In the **App Credentials** tab, locate the **Redirect URL for OAuth** field and paste in your ngrok forwarding URL:
+
+```
+https://abc123def456.ngrok.io
+```
+
+This value must match the `REDIRECT_URL` in your `.env` file **exactly** — including the scheme (`https://`) and no trailing slash. After pasting the URL, click **Continue**.
+
+## Fill out app information
+
+Before you can install the app, Zoom requires a few basic details about it. Fill in the following fields on the **Information** tab:
+
+| Field | Description |
+|---|---|
+| **Short Description** | 1–2 sentences summarising what the app does |
+| **Long Description** | A full paragraph explaining the app's purpose and functionality |
+| **Developer Name** | Your name or your organisation's name |
+| **Developer Contact** | A valid contact email address |
+
+Click **Continue** once all required fields are filled in.
+
+<Note>
+  You do not need to add any **Features** (such as Event Subscriptions or Webhooks) for this sample app. You can skip the Features section entirely and proceed to Scopes.
+</Note>
+
+## Add OAuth scopes
+
+The sample app calls a single Zoom API endpoint — `GET /v2/users/me` — to fetch the authorized user's profile. You only need to add one scope to support this.
+
+On the **Scopes** tab, click **\+ Add Scopes**, search for `user:read`, and select **View your user information**. Then click **Done**.
+
+<Info>
+  OAuth scopes control exactly what data your app can access on behalf of a user. Because the sample app only calls `/v2/users/me`, the single `user:read` scope is sufficient. Requesting more scopes than necessary is a security anti-pattern.
+</Info>
+
+| Scope | Description | Required endpoint |
+|---|---|---|
+| `user:read` | View the authorized user's profile information | `GET /v2/users/me` |
+
+Click **Continue** to advance to the installation page.
+
+## Install the app
+
+<Steps>
+  <Step title="Navigate to the installation tab">
+    Go to the **Local Test** or **Installation** tab in your app's settings and click **Install**. You can also copy the installation URL and paste it directly into your browser.
+  </Step>
+
+  <Step title="Review the authorization consent screen">
+    Zoom displays a consent screen listing all the scopes your app is requesting. Confirm that only `user:read` — **View your user information** — is shown.
+  </Step>
+
+  <Step title="Click Allow">
+    Click **Allow** to authorize the app on your account. Zoom immediately redirects your browser to your ngrok URL with a `?code=` query parameter appended, for example:
+
+    ```
+    https://abc123def456.ngrok.io/?code=eyJhbGciOiJIUzI1NiJ9...
+    ```
+  </Step>
+
+  <Step title="View your profile data">
+    Your running server receives the authorization code, exchanges it for an access token at `https://zoom.us/oauth/token`, then uses that token to call `GET /v2/users/me`. Your Zoom profile is returned as JSON and displayed in the browser.
+  </Step>
+</Steps>
+
+<Warning>
+  If you are not the **account admin** on your Zoom account, your admin may require pre-approval before the app can be installed. In that case, submit a pre-approval request to your account admin and wait for confirmation before proceeding.
+</Warning>
+
+## Next step
+
+See [How the OAuth Flow Works](/how-it-works/oauth-flow) to understand what happens on the server side after Zoom delivers the authorization code to your redirect URL.

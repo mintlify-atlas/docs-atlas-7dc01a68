@@ -1,0 +1,79 @@
+---
+title: "Expose Your Local Server with ngrok for Zoom OAuth"
+sidebarTitle: "ngrok Tunnel"
+description: "Use ngrok to create a public HTTPS URL for your local port 4000 server so Zoom can redirect users back to your app after OAuth authorization."
+---
+
+Zoom's OAuth flow requires a publicly reachable HTTPS redirect URI — during local development, your `localhost` server isn't directly accessible from the internet. ngrok creates a secure tunnel that forwards a public HTTPS URL to your local port 4000, allowing Zoom to deliver the authorization code to your app.
+
+## Why ngrok is required
+
+<Info>
+  Zoom's OAuth redirect URI must be an **HTTPS URL**. When a user authorizes your app, Zoom sends a `?code=` parameter to the redirect URI you configured. Without a public URL pointing at your local server, this delivery never arrives — the authorization code is lost and the OAuth flow fails.
+</Info>
+
+## Install ngrok
+
+Download and install ngrok from the [official download page](https://ngrok.com/download). After installation, connect your ngrok account by adding your authtoken:
+
+```bash
+ngrok config add-authtoken YOUR_AUTHTOKEN
+```
+
+You can find your authtoken in the [ngrok dashboard](https://dashboard.ngrok.com/get-started/your-authtoken) after signing up for a free account.
+
+## Run ngrok
+
+<Steps>
+  <Step title="Start the tunnel on port 4000">
+    With your local server already running on port 4000, open a **new terminal window** and start the ngrok tunnel:
+
+    ```bash
+    ngrok http 4000
+    ```
+  </Step>
+
+  <Step title="Copy the forwarding URL">
+    ngrok will display a forwarding URL in its output. Copy the **HTTPS** URL — it looks like this:
+
+    ```
+    https://abc123def456.ngrok.io
+    ```
+  </Step>
+
+  <Step title="Add the URL to your .env file">
+    Open your `.env` file and set it as the value of `REDIRECT_URL`:
+
+    ```ini .env
+    REDIRECT_URL=https://abc123def456.ngrok.io
+    ```
+
+    Save the file. `nodemon` will automatically restart your server and pick up the new value.
+  </Step>
+
+  <Step title="Add the URL to your Zoom Marketplace app">
+    Paste the same ngrok URL into the **Redirect URL for OAuth** field in your Zoom App's **App Credentials** tab on the Zoom App Marketplace. See [Create a Zoom Marketplace App](/setup/zoom-marketplace-app) for details.
+
+    The URL in your `.env` and the URL registered in the Marketplace must match **exactly** — including the protocol and any trailing slashes.
+  </Step>
+</Steps>
+
+## Keep ngrok running
+
+<Warning>
+  **ngrok must stay running the entire time you are testing.** If the ngrok process exits or disconnects, the tunnel goes offline and you are assigned a **new forwarding URL** when you restart it. You will need to update `REDIRECT_URL` in your `.env` file **and** update the Redirect URL field in your Zoom App Marketplace settings before the OAuth flow will work again.
+</Warning>
+
+## Example ngrok output
+
+After running `ngrok http 4000`, your terminal should look similar to this:
+
+```
+Session Status     online
+Account            your@email.com
+Version            3.x.x
+Region             United States (us)
+Forwarding         https://abc123def456.ngrok.io -> http://localhost:4000
+```
+
+The `Forwarding` line confirms that any request sent to `https://abc123def456.ngrok.io` is tunnelled through to your local server at `http://localhost:4000`.

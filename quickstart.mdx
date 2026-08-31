@@ -1,47 +1,164 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Zoom OAuth in Node.js"
+sidebarTitle: "Quickstart"
+description: "Clone the Zoom OAuth Sample App, configure your credentials, and make your first authenticated Zoom API call in under five minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+This guide takes you from zero to a fully working OAuth flow — a running Node.js server that authorizes via Zoom and returns your Zoom user profile as JSON — in about five minutes. By the end you will have experienced every step of the OAuth 2.0 authorization code grant: the redirect to Zoom, the code exchange, the API call, and the JSON response in your browser.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+## Before you begin
 
-## Prerequisites
+<Note>
+  Make sure the following are installed and ready before starting:
+  - **Node.js 18+** — required for the `--env-file` flag used by the start script. Check your version with `node --version`.
+  - **A Zoom account** — free accounts work. Sign up at [zoom.us](https://zoom.us/signup).
+  - **ngrok** — required to expose your local server to Zoom's redirect. Install from [ngrok.com](https://ngrok.com/download) and authenticate your account.
+</Note>
 
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+## Steps
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Clone the repository">
+    Clone the official Zoom OAuth Sample App from GitHub and navigate into the project directory:
 
     ```bash
-    npm install your-package
+    git clone https://github.com/zoom/zoom-oauth-sample-app.git
+    cd zoom-oauth-sample-app
     ```
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
+
+  <Step title="Install dependencies">
+    Install the project's dependencies with npm:
 
     ```bash
-    your-cli init
+    npm install
+    ```
+
+    This installs the project's single dev dependency — **nodemon** (`^3.1.9`) — which handles hot reloading and `.env` file loading during development. There are no runtime dependencies.
+  </Step>
+
+  <Step title="Create your .env file">
+    Create a `.env` file at the project root to hold your Zoom OAuth credentials:
+
+    ```bash .env
+    CLIENT_ID=
+    CLIENT_SECRET=
+    REDIRECT_URL=
+    ```
+
+    You will fill in these values in the steps below. Leave the file open for editing.
+
+    <Warning>
+      `.env` is listed in `.gitignore` — it will never be committed to version control. **Never share or commit your `CLIENT_ID` or `CLIENT_SECRET` publicly.** Treat them the same as passwords.
+    </Warning>
+  </Step>
+
+  <Step title="Start ngrok">
+    In a separate terminal window, start ngrok on port 4000 — the same port the sample app uses:
+
+    ```bash
+    ngrok http 4000
+    ```
+
+    ngrok creates a public HTTPS URL (called a forwarding URL) that tunnels traffic to your local server on port 4000. Zoom requires a publicly reachable HTTPS URL as the redirect URI — `localhost` alone won't work.
+
+    Copy the forwarding URL from the ngrok output (it looks like `https://abc123.ngrok.io`) and set it as your `REDIRECT_URL` in `.env`:
+
+    ```bash .env
+    REDIRECT_URL=https://abc123.ngrok.io
+    ```
+
+    <Note>
+      Keep ngrok running for the entire session. If it restarts, it generates a new forwarding URL and you'll need to update both `.env` and your Zoom app's redirect URI settings.
+    </Note>
+  </Step>
+
+  <Step title="Create a Zoom OAuth App">
+    Sign in to the [Zoom App Marketplace](https://marketplace.zoom.us/develop/create) and create a new **OAuth** app. During setup:
+
+    1. Copy the generated **Client ID** and **Client Secret** into your `.env` file.
+    2. Set the **Redirect URL for OAuth** field to your ngrok forwarding URL (the same value as `REDIRECT_URL`).
+    3. Add the `user:read` scope — this allows the app to call `GET /v2/users/me` and read your profile.
+
+    Your completed `.env` should look similar to this:
+
+    ```bash .env
+    CLIENT_ID=your_client_id_here
+    CLIENT_SECRET=your_client_secret_here
+    REDIRECT_URL=https://abc123.ngrok.io
+    ```
+
+    For detailed, step-by-step instructions on creating and configuring the Marketplace app, see [Zoom Marketplace Setup](/setup/zoom-marketplace-app).
+  </Step>
+
+  <Step title="Start the server">
+    Back in your project directory, start the development server:
+
+    ```bash
+    npm run start
+    ```
+
+    This runs `nodemon --env-file=.env index.js`, which:
+    - Loads your `.env` credentials into `process.env` automatically (no dotenv library needed).
+    - Starts the HTTP server on **port 4000**.
+    - Watches `index.js` for changes and restarts the server automatically.
+
+    You should see the following confirmation in your terminal:
+
+    ```
+    Server listening on port 4000
     ```
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
-    ```
+  <Step title="Authorize and view your profile">
+    Open `http://localhost:4000` in your browser.
+
+    The server immediately redirects you to Zoom's authorization page at `https://zoom.us/oauth/authorize`. Log in (if prompted) and click **Allow** to grant the app the `user:read` permission.
+
+    Zoom redirects your browser back to your ngrok URL (and then to `localhost:4000`) with an authorization code in the query string. The server:
+
+    1. Parses the `code` parameter from the URL.
+    2. Exchanges it for an access token via `POST https://zoom.us/oauth/token`.
+    3. Uses the access token to call `GET https://api.zoom.us/v2/users/me`.
+    4. Returns your Zoom user profile as formatted JSON in the browser.
   </Step>
 </Steps>
 
-<Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
+## What you'll see
 
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
-</Tip>
+After a successful authorization, your browser displays your Zoom profile data as pretty-printed JSON. The response from `/v2/users/me` looks like this:
+
+```json
+{
+  "id": "abcde12345",
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "type": 1,
+  "role_name": "Owner",
+  "pmi": 1234567890,
+  "use_pmi": false,
+  "timezone": "America/New_York",
+  "verified": 1,
+  "status": "active"
+}
+```
+
+This confirms the full OAuth 2.0 authorization code flow completed successfully — the server obtained a valid access token and used it to make an authenticated Zoom API call on your behalf.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="How the OAuth Flow Works" icon="arrows-rotate" href="/how-it-works/oauth-flow">
+    Dive deeper into the authorization code grant — what each redirect does, how the token exchange works, and how the access token is sent to the Zoom API.
+  </Card>
+  <Card title="Environment Variables" icon="gear" href="/how-it-works/environment-variables">
+    Learn how `CLIENT_ID`, `CLIENT_SECRET`, and `REDIRECT_URL` are loaded via nodemon's `--env-file` flag and used throughout the server.
+  </Card>
+  <Card title="Zoom Marketplace Setup" icon="store" href="/setup/zoom-marketplace-app">
+    Step-by-step guide to creating an OAuth app on the Zoom App Marketplace, configuring redirect URIs, and adding scopes.
+  </Card>
+  <Card title="Troubleshooting" icon="triangle-exclamation" href="/reference/troubleshooting">
+    Common errors — invalid redirect URI, missing scopes, expired codes — and how to resolve them.
+  </Card>
+</CardGroup>

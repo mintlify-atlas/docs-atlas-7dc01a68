@@ -1,0 +1,160 @@
+---
+title: "Zoom API Endpoints Used in the OAuth Sample App"
+sidebarTitle: "Zoom API Endpoints"
+description: "Reference for the three Zoom API endpoints the sample app calls: the OAuth authorize URL, the token exchange endpoint, and the GET /v2/users/me user profile endpoint."
+---
+
+The sample app interacts with three Zoom URLs — the authorization endpoint (browser redirect), the token endpoint (server-to-server POST), and the user info endpoint (authenticated GET). This page documents each endpoint's parameters, headers, and responses as used in the app.
+
+## Authorization Endpoint
+
+**URL:** `GET https://zoom.us/oauth/authorize`
+
+**Purpose:** Browser redirect to Zoom's consent screen.
+
+**Used when:** A user visits `/` without a `code` query parameter. The server responds with a `302` redirect to this URL, sending the user's browser to Zoom's authorization page.
+
+### Query Parameters
+
+| Parameter | Required | Value |
+|-----------|----------|-------|
+| `response_type` | Yes | `code` |
+| `client_id` | Yes | Your app's Client ID |
+| `redirect_uri` | Yes | Your `REDIRECT_URL` |
+
+### Example Redirect URL
+
+```
+https://zoom.us/oauth/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fabc123.ngrok.io
+```
+
+After the user grants permission on Zoom's consent screen, Zoom redirects the browser back to your `redirect_uri` with a `code` query parameter appended:
+
+```
+https://abc123.ngrok.io/?code=AUTHORIZATION_CODE
+```
+
+---
+
+## Token Exchange Endpoint
+
+**URL:** `POST https://zoom.us/oauth/token`
+
+**Purpose:** Exchange the authorization code for an access token.
+
+**Called by:** The server (not the browser) after receiving the `code` parameter on the redirect back to `/`. This is a server-to-server call — the client never sees the credentials.
+
+### Request Headers
+
+| Header | Value |
+|--------|-------|
+| `Authorization` | `Basic base64(CLIENT_ID:CLIENT_SECRET)` |
+| `Content-Type` | `application/x-www-form-urlencoded` |
+
+The `Authorization` header value is constructed by Base64-encoding the string `CLIENT_ID:CLIENT_SECRET`:
+
+```javascript
+Buffer.from(`${process.env.CLIENT_ID}:${process.env.CLIENT_SECRET}`).toString('base64')
+```
+
+### Request Body Parameters
+
+| Parameter | Value |
+|-----------|-------|
+| `grant_type` | `authorization_code` |
+| `code` | The authorization code received from the redirect |
+| `redirect_uri` | Must exactly match the registered redirect URI |
+
+### Success Response (200 OK)
+
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiJ9...",
+  "token_type": "bearer",
+  "refresh_token": "eyJhbGciOiJSUzI1NiJ9...",
+  "expires_in": 3600,
+  "scope": "user:read"
+}
+```
+
+<Warning>
+  Access tokens expire after **1 hour** (`expires_in: 3600`). The sample app
+  does not implement token refresh — for production apps, use the
+  `refresh_token` with the token endpoint to obtain a new access token before
+  the current one expires.
+</Warning>
+
+---
+
+## User Info Endpoint
+
+**URL:** `GET https://api.zoom.us/v2/users/me`
+
+**Purpose:** Retrieve the authorized user's Zoom profile.
+
+**Required scope:** `user:read`
+
+### Request Headers
+
+| Header | Value |
+|--------|-------|
+| `Authorization` | `Bearer <access_token>` |
+
+### Success Response (200 OK)
+
+```json
+{
+  "id": "abcde12345",
+  "first_name": "Jane",
+  "last_name": "Doe",
+  "email": "jane.doe@example.com",
+  "type": 1,
+  "role_name": "Owner",
+  "pmi": 1234567890,
+  "use_pmi": false,
+  "timezone": "America/New_York",
+  "verified": 1,
+  "status": "active"
+}
+```
+
+### Key Response Fields
+
+<ResponseField name="id" type="string">
+  The user's unique Zoom ID.
+</ResponseField>
+
+<ResponseField name="first_name" type="string">
+  The user's first name.
+</ResponseField>
+
+<ResponseField name="last_name" type="string">
+  The user's last name.
+</ResponseField>
+
+<ResponseField name="email" type="string">
+  The user's email address associated with their Zoom account.
+</ResponseField>
+
+<ResponseField name="type" type="integer">
+  The user's account type. `1` = Basic, `2` = Licensed, `3` = On-prem.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The user's account status (e.g., `active`, `inactive`, `pending`).
+</ResponseField>
+
+<ResponseField name="timezone" type="string">
+  The user's timezone setting (e.g., `America/New_York`).
+</ResponseField>
+
+<ResponseField name="verified" type="integer">
+  Whether the user's email address has been verified. `1` = verified, `0` = not verified.
+</ResponseField>
+
+---
+
+<Tip>
+  To explore more Zoom API endpoints and their required scopes, see the [Zoom
+  API Reference](https://developers.zoom.us/docs/api/).
+</Tip>
