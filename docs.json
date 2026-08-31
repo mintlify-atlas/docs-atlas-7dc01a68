@@ -3,14 +3,35 @@
   "name": "Zoom OAuth Sample App",
   "theme": "luma",
   "colors": {
-    "primary": "#0c5cfc",
-    "light": "#84b4fc",
-    "dark": "#0c5cfc"
+    "primary": "#0C5CFF",
+    "light": "#8AB4FF",
+    "dark": "#0C5CFF"
   },
-  "favicon": "https://media.brand.dev/6be4024f-e40e-4ae7-84b1-81c52b7d2b57.png",
+  "favicon": "/favicon.svg",
   "logo": {
-    "light": "https://media.brand.dev/8ac79238-82a6-4f2c-89b2-b03754fdc5a9.png",
-    "dark": "https://media.brand.dev/8ac79238-82a6-4f2c-89b2-b03754fdc5a9.png"
+    "light": "/logo/zoom-light.svg",
+    "dark": "/logo/zoom-dark.svg",
+    "href": "/"
+  },
+  "appearance": {
+    "default": "light"
+  },
+  "styling": {
+    "eyebrows": "breadcrumbs"
+  },
+  "fonts": {
+    "heading": {
+      "family": "Happy Display",
+      "source": "/fonts/happy-display-600.woff2",
+      "format": "woff2",
+      "weight": 600
+    },
+    "body": {
+      "family": "Almaden Sans",
+      "source": "/fonts/almaden-sans-400.woff2",
+      "format": "woff2",
+      "weight": 400
+    }
   },
   "navbar": {
     "primary": {
