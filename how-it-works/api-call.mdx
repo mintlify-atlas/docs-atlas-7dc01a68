@@ -1,7 +1,7 @@
 ---
-title: "Calling the Zoom API with an OAuth Access Token"
+title: "Calling the Zoom API After the OAuth Token Exchange"
 sidebarTitle: "API Call"
-description: "How the sample app calls GET /v2/users/me using a Bearer access token, parses the response, and renders the user's Zoom profile as JSON in the browser."
+description: "How the app calls GET /v2/users/me with a Bearer access token, parses the JSON response, and renders the user's Zoom profile as HTML in the browser."
 ---
 
 After the token exchange succeeds, the sample app immediately makes a single authenticated API call to Zoom: `GET https://api.zoom.us/v2/users/me`. This endpoint returns the profile of the user who authorized the app. The response is rendered as formatted JSON directly in the browser.

@@ -1,7 +1,7 @@
 ---
-title: "Environment Variables for Zoom OAuth Sample App"
+title: "Environment Variables for the Zoom OAuth Sample App"
 sidebarTitle: "Environment Variables"
-description: "Reference for the three environment variables the Zoom OAuth Sample App requires: CLIENT_ID, CLIENT_SECRET, and REDIRECT_URL — how they are loaded and used."
+description: "Reference for the three environment variables required by the app: CLIENT_ID, CLIENT_SECRET, and REDIRECT_URL — how each is loaded and used in the code."
 ---
 
 The sample app reads all its configuration from three environment variables. These are loaded at startup via `nodemon --env-file=.env`, so they are available in `process.env` throughout `index.js` without any additional dotenv package.

@@ -1,7 +1,7 @@
 ---
-title: "Zoom API Endpoints Used in the OAuth Sample App"
+title: "Zoom API Endpoints Reference for the OAuth Sample App"
 sidebarTitle: "Zoom API Endpoints"
-description: "Reference for the three Zoom API endpoints the sample app calls: the OAuth authorize URL, the token exchange endpoint, and the GET /v2/users/me user profile endpoint."
+description: "Documents the three Zoom URLs the sample app uses: authorization redirect, token exchange endpoint, and the GET /v2/users/me endpoint."
 ---
 
 The sample app interacts with three Zoom URLs — the authorization endpoint (browser redirect), the token endpoint (server-to-server POST), and the user info endpoint (authenticated GET). This page documents each endpoint's parameters, headers, and responses as used in the app.
@@ -24,13 +24,13 @@ The sample app interacts with three Zoom URLs — the authorization endpoint (br
 
 ### Example Redirect URL
 
-```
+```text
 https://zoom.us/oauth/authorize?response_type=code&client_id=YOUR_CLIENT_ID&redirect_uri=https%3A%2F%2Fabc123.ngrok.io
 ```
 
 After the user grants permission on Zoom's consent screen, Zoom redirects the browser back to your `redirect_uri` with a `code` query parameter appended:
 
-```
+```text
 https://abc123.ngrok.io/?code=AUTHORIZATION_CODE
 ```
 

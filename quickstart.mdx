@@ -1,5 +1,5 @@
 ---
-title: "Get Started with Zoom OAuth in Node.js"
+title: "Quickstart: Run the Zoom OAuth Sample App in Node.js"
 sidebarTitle: "Quickstart"
 description: "Clone the Zoom OAuth Sample App, configure your credentials, and make your first authenticated Zoom API call in under five minutes."
 ---
@@ -10,7 +10,7 @@ This guide takes you from zero to a fully working OAuth flow — a running Node.
 
 <Note>
   Make sure the following are installed and ready before starting:
-  - **Node.js 18+** — required for the `--env-file` flag used by the start script. Check your version with `node --version`.
+  - **Node.js 20.6+** — required for the `--env-file` flag used by the start script. Check your version with `node --version`.
   - **A Zoom account** — free accounts work. Sign up at [zoom.us](https://zoom.us/signup).
   - **ngrok** — required to expose your local server to Zoom's redirect. Install from [ngrok.com](https://ngrok.com/download) and authenticate your account.
 </Note>
@@ -40,7 +40,7 @@ This guide takes you from zero to a fully working OAuth flow — a running Node.
   <Step title="Create your .env file">
     Create a `.env` file at the project root to hold your Zoom OAuth credentials:
 
-    ```bash .env
+    ```ini
     CLIENT_ID=
     CLIENT_SECRET=
     REDIRECT_URL=
@@ -64,7 +64,7 @@ This guide takes you from zero to a fully working OAuth flow — a running Node.
 
     Copy the forwarding URL from the ngrok output (it looks like `https://abc123.ngrok.io`) and set it as your `REDIRECT_URL` in `.env`:
 
-    ```bash .env
+    ```ini
     REDIRECT_URL=https://abc123.ngrok.io
     ```
 
@@ -82,7 +82,7 @@ This guide takes you from zero to a fully working OAuth flow — a running Node.
 
     Your completed `.env` should look similar to this:
 
-    ```bash .env
+    ```ini
     CLIENT_ID=your_client_id_here
     CLIENT_SECRET=your_client_secret_here
     REDIRECT_URL=https://abc123.ngrok.io
@@ -105,7 +105,7 @@ This guide takes you from zero to a fully working OAuth flow — a running Node.
 
     You should see the following confirmation in your terminal:
 
-    ```
+    ```text
     Server listening on port 4000
     ```
   </Step>
